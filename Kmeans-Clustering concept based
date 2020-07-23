@@ -1,0 +1,80 @@
+import numpy as np
+import pandas as pd
+import random
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import LabelEncoder
+
+#Feature and Target
+y= Data["class"]
+
+To_Drop=["class","sepal length in cm","petal width in cm"]
+
+X=Data.drop(To_Drop,axis=1)
+
+
+random.seed(0)
+#Dataset
+Data=pd.read_csv("C:/Users/Syed Abbas Rizvi/.spyder-py3/iris.data",sep=","
+                 ,header=None,
+                 names=(["sepal length in cm","sepal width in cm",
+                         "petal length in cm",
+                         "petal width in cm",
+                         "class" ]))
+
+#Feature and Target
+y= Data["class"]
+
+To_Drop=["class","sepal length in cm","petal width in cm"]
+
+X=Data.drop(To_Drop,axis=1)
+
+#Range for Centroids
+Max_x,Min_x=int(X.loc[:,"sepal width in cm"].max()), int(X.loc[:,"sepal width in cm"].min())
+Max_y,Min_y=int(X.loc[:,"petal length in cm"].max()), int(X.loc[:,"petal length in cm"].min())
+
+#Distance Method
+def Distance(x_1,x_2,y_1,y_2):
+    return((np.sqrt(((x_2-x_1)**2)+((y_2-y_1)**2))))
+    
+#Random centroids
+C0_x,C0_y = random.randint(Min_x, Max_x),random.randint(Min_x, Max_x)
+C1_x,C1_y = random.randint(Min_x, Max_x),random.randint(Min_x, Max_x)
+C2_x,C2_y = random.randint(Min_x, Max_x),random.randint(Min_x, Max_x)
+  
+#Iterations
+for I in range(25):
+      
+    S=[]
+    for i in range(X.shape[0]):
+        D_0=Distance(C0_x, X.loc[i,"sepal width in cm"], C0_y, X.loc[i,"petal length in cm"])
+        D_1=Distance(C1_x, X.loc[i,"sepal width in cm"], C1_y, X.loc[i,"petal length in cm"])
+        D_2=Distance(C2_x, X.loc[i,"sepal width in cm"], C2_y, X.loc[i,"petal length in cm"])
+        
+        s=np.array([D_0,D_1,D_2])
+        s=np.argsort(s)[0]
+        
+        S.append(s)
+
+    X["Cluster"]=" "
+    X["Cluster"]=S 
+    
+    C0_x,C0_y = X.loc[X["Cluster"]==0,"sepal width in cm"].mean(),X.loc[X["Cluster"]==0,"sepal width in cm"].mean()
+    C1_x,C1_y = X.loc[X["Cluster"]==1,"sepal width in cm"].mean(),X.loc[X["Cluster"]==1,"sepal width in cm"].mean()
+    C2_x,C2_y = X.loc[X["Cluster"]==2,"sepal width in cm"].mean(),X.loc[X["Cluster"]==2,"sepal width in cm"].mean()
+   
+Encoder=LabelEncoder()
+X["Actual class"]=Encoder.fit_transform(y)
+
+Valid=np.count_nonzero(np.where(X["Actual class"]==X["Cluster"]))/X.shape[0]
+
+
+Class=["Iris-setosa","Iris-versicolor","Iris-virginica"]
+for i in range(3):
+    
+    x=X.loc[X["Cluster"]==i,["sepal width in cm"]]
+    y=X.loc[X["Cluster"]==i,["petal length in cm"]]
+    plt.scatter(x,y,s=50,cmap="PiYG")
+   
+plt.legend(labels=Class)
+plt.title("Concept based Kmeans on Iris data")
