@@ -12,9 +12,11 @@ To_Drop=["class","sepal length in cm","petal width in cm"]
 
 X=Data.drop(To_Drop,axis=1)
 
-
+#to ensure we get the same x and y point each time a code runs
 random.seed(0)
+
 #Dataset
+#data originally came without column headings hence header and name arguments passed 
 Data=pd.read_csv("C:/Users/Syed Abbas Rizvi/.spyder-py3/iris.data",sep=","
                  ,header=None,
                  names=(["sepal length in cm","sepal width in cm",
@@ -22,53 +24,67 @@ Data=pd.read_csv("C:/Users/Syed Abbas Rizvi/.spyder-py3/iris.data",sep=","
                          "petal width in cm",
                          "class" ]))
 
-#Feature and Target
+#Target
 y= Data["class"]
 
+#Features to drop to have two features
 To_Drop=["class","sepal length in cm","petal width in cm"]
 
+#we are left with sepal width in cm as x-axis and sepal width in cm as y-axis
 X=Data.drop(To_Drop,axis=1)
 
-#Range for Centroids
+#Range for Centroids: highly important as the values were less than 7 which would make distance calculations be small
+#Thus a normalized range needs to selected based on the data.
 Max_x,Min_x=int(X.loc[:,"sepal width in cm"].max()), int(X.loc[:,"sepal width in cm"].min())
 Max_y,Min_y=int(X.loc[:,"petal length in cm"].max()), int(X.loc[:,"petal length in cm"].min())
 
-#Distance Method
+#Distance Method or euclidean formula
 def Distance(x_1,x_2,y_1,y_2):
     return((np.sqrt(((x_2-x_1)**2)+((y_2-y_1)**2))))
     
-#Random centroids
+#Random centroids with appropiate ranges
 C0_x,C0_y = random.randint(Min_x, Max_x),random.randint(Min_x, Max_x)
 C1_x,C1_y = random.randint(Min_x, Max_x),random.randint(Min_x, Max_x)
 C2_x,C2_y = random.randint(Min_x, Max_x),random.randint(Min_x, Max_x)
   
-#Iterations
+#Iterations --> 25 times 
 for I in range(25):
-      
+   
+   #create an empty list
     S=[]
+    
+    #calculate distance of each data with the three centroids
     for i in range(X.shape[0]):
         D_0=Distance(C0_x, X.loc[i,"sepal width in cm"], C0_y, X.loc[i,"petal length in cm"])
         D_1=Distance(C1_x, X.loc[i,"sepal width in cm"], C1_y, X.loc[i,"petal length in cm"])
         D_2=Distance(C2_x, X.loc[i,"sepal width in cm"], C2_y, X.loc[i,"petal length in cm"])
         
+        #chose the centroid that is closest to the data point argsort gives index which then represents the cluster
         s=np.array([D_0,D_1,D_2])
         s=np.argsort(s)[0]
         
+        #add the cluster (0 1 or 2) to the empty list
         S.append(s)
-
+    
+    #create an empty column 
     X["Cluster"]=" "
+    
+    #fill the column with clusters
     X["Cluster"]=S 
     
+    #optimize the centroids by choosing all the rows that are in the appropriate cluster and take the mean to get the new centroid.
     C0_x,C0_y = X.loc[X["Cluster"]==0,"sepal width in cm"].mean(),X.loc[X["Cluster"]==0,"sepal width in cm"].mean()
     C1_x,C1_y = X.loc[X["Cluster"]==1,"sepal width in cm"].mean(),X.loc[X["Cluster"]==1,"sepal width in cm"].mean()
     C2_x,C2_y = X.loc[X["Cluster"]==2,"sepal width in cm"].mean(),X.loc[X["Cluster"]==2,"sepal width in cm"].mean()
-   
+
+#creating a transformer to turn the Class column which contains category into a numerical values
 Encoder=LabelEncoder()
 X["Actual class"]=Encoder.fit_transform(y)
 
+#seeing the accuracy of correctly custers generated
 Valid=np.count_nonzero(np.where(X["Actual class"]==X["Cluster"]))/X.shape[0]
 
-
+#Making the scatterplot to visualize the clusters
 Class=["Iris-setosa","Iris-versicolor","Iris-virginica"]
 for i in range(3):
     
