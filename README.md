@@ -1,2 +1,2 @@
 # Iris-Classificiation-project
-Classification techniques carried on iris data.
+Classification techniques carried out on iris data.
