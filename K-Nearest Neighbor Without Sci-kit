@@ -1,0 +1,99 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import sklearn 
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+
+#importing data and assigning column names
+Data=pd.read_csv("iris.data",sep=","
+                 ,header=None,
+                 names=(["sepal length in cm","sepal width in cm",
+                         "petal length in cm",
+                         "petal width in cm",
+                         "class" ]))
+
+#Encoder to give numerical representation to different classes of Iris
+Encoder=LabelEncoder()
+
+#applying the label encoder
+Data["Actual Class"]=Encoder.fit_transform(Data["class"])
+
+#target which we are trying to predict
+y=Data["Actual Class"]
+
+#drop the columns we are not utilizng
+DropColumns=["sepal length in cm","petal width in cm","class"]
+X=Data.drop(DropColumns,axis=1)
+
+#splitting the dataset for training and testing
+X_train, X_valid,y_valid,y_train=train_test_split(X,y,test_size=0.2,train_size=0.8,random_state=0)
+
+
+#splitting the dataset causes numerical order of indices to be unordered  
+X_train=X_train.reset_index(drop=True)
+X_valid=X_valid.reset_index(drop=True)
+
+#distance formula 
+def distance (x1,x2,y1,y2):
+    return(np.sqrt(((x2-x1)**2) + ((y2-y1)**2)))
+
+#empty list which will be filled and added as the content to new column
+#added to X_valid
+Predicted_class=[]
+
+
+for i in range(X_valid.shape[0]): #this for loop to go through each X_valid value 
+     S=np.array(np.zeros(X_train.shape[0])) #empty array filled with zeros
+     
+     for j in range(X_train.shape[0]):# this for loop to go through each X_train value
+         
+        #X_train values to be used in distance formula with X_valid value      
+         D=distance(
+             X_valid.loc[i,"sepal width in cm"],
+             X_train.loc[j,"sepal width in cm"],
+             X_valid.loc[i,"petal length in cm"],
+             X_train.loc[j,"petal length in cm"])
+
+         S[j]=D #each distance gets added to an array to have array full of distances
+     
+        
+     KNN_I=np.argsort(S)[0:5] #get the 5 closest neighbors to X_valid value
+     KNN=[] #empty list to be filled numerical respresentation of actual class in X_train
+     
+     for I in KNN_I: #this for loop appends the numerical respresentation of actual class in X_train
+         KNN.append(X_train.loc[I,"Actual Class"])
+     
+    
+     #choose the class that occurs the most and append to predicted_class list
+     Predicted_class.append(max(KNN,key=KNN.count))
+
+ 
+#create a new column in predicted class and fill it with values from predicted_class list    
+X_valid["Predicted Class"]=Predicted_class            
+ 
+#validation of how accurately we predicted the class of X_valid             
+Valid=np.count_nonzero(np.where(X_valid["Actual Class"]==X_valid["Predicted Class"]))/X_valid.shape[0]
+
+
+
+#creating scatter plot for firstly the labeled set (X_train)
+for i in range(3):
+    
+    x=X_train.loc[X_train["Actual Class"]==i,["sepal width in cm"]]
+    y=X_train.loc[X_train["Actual Class"]==i,["petal length in cm"]]
+    plt.scatter(x,y,s=50,cmap="PiYG")
+
+
+#creating a scatterplot for testing set (X_valid)
+verts = np.array([[-1, -1], [1, -1], [1, 1], [-1, -1]])
+x=X_valid["sepal width in cm"]
+y=X_valid["petal length in cm"]
+plt.scatter(x,y,s=75,c="black",marker=(5,1))
+
+#putting title,axis labels, legends
+plt.title("KNN on Iris Data without Sci-kit")
+plt.xlabel("sepal width in cm")
+plt.ylabel("petal length in cm")
+Class=["Iris-setosa","Iris-versicolor","Iris-virginica","Test-set"]
+plt.legend(labels=Class)
